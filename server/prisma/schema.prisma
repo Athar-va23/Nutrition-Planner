@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER MODULE ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  profile       UserProfile?
+  preferences   UserPreference?
+  mealPlans     MealPlan[]
+  groceryLists  GroceryList[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id              String  @id @default(cuid())
+  userId          String  @unique @map("user_id")
+  age             Int?
+  gender          String?
+  heightCm        Float?  @map("height_cm")
+  weightKg        Float?  @map("weight_kg")
+  activityLevel   String  @default("moderate") @map("activity_level")
+  healthGoal      String  @default("maintain") @map("health_goal")
+  calorieTarget   Int?    @map("calorie_target")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique @map("user_id")
+  dietaryTypes       String   @default("[]") @map("dietary_types")
+  allergies          String   @default("[]")
+  restrictedFoods    String   @default("[]") @map("restricted_foods")
+  cuisinePreferences String   @default("[]") @map("cuisine_preferences")
+  maxPrepTime        Int?     @map("max_prep_time")
+  mealsPerDay        Int      @default(3) @map("meals_per_day")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ==================== MEAL PLAN MODULE ====================
+
+model MealPlan {
+  id             String     @id @default(cuid())
+  userId         String     @map("user_id")
+  name           String
+  duration       String     @default("weekly")
+  startDate      DateTime   @map("start_date")
+  endDate        DateTime   @map("end_date")
+  totalCalories  Int        @map("total_calories")
+  aiGenerated    Boolean    @default(true) @map("ai_generated")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planMeals PlanMeal[]
+  groceryList GroceryList?
+
+  @@map("meal_plans")
+}
+
+model PlanMeal {
+  id         String   @id @default(cuid())
+  planId     String   @map("plan_id")
+  mealId     String   @map("meal_id")
+  dayNumber  Int      @map("day_number")
+  mealType   String   @map("meal_type")
+
+  // Relations
+  mealPlan MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  meal     Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, dayNumber, mealType])
+  @@map("plan_meals")
+}
+
+model Meal {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  instructions  String   @default("[]")
+  prepTimeMin   Int      @map("prep_time_min")
+  cookTimeMin   Int      @map("cook_time_min")
+  servings      Int
+  difficulty    String   @default("medium")
+  imageUrl      String?  @map("image_url")
+  cuisineType   String?  @map("cuisine_type")
+  aiGenerated   Boolean  @default(true) @map("ai_generated")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ingredients   Ingredient[]
+  nutritionInfo NutritionInfo?
+  planMeals     PlanMeal[]
+
+  @@map("meals")
+}
+
+model Ingredient {
+  id          String  @id @default(cuid())
+  mealId      String  @map("meal_id")
+  name        String
+  amount      Float
+  unit        String
+  isOptional  Boolean @default(false) @map("is_optional")
+
+  // Relations
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@map("ingredients")
+}
+
+model NutritionInfo {
+  id          String @id @default(cuid())
+  mealId      String @unique @map("meal_id")
+  calories    Int
+  proteinG    Float  @map("protein_g")
+  carbsG      Float  @map("carbs_g")
+  fatG        Float  @map("fat_g")
+  fiberG      Float? @map("fiber_g")
+  sugarG      Float? @map("sugar_g")
+  sodiumMg    Float? @map("sodium_mg")
+  cholesterolMg Float? @map("cholesterol_mg")
+
+  // Relations
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@map("nutrition_info")
+}
+
+// ==================== GROCERY MODULE ====================
+
+model GroceryList {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  mealPlanId   String?  @unique @map("meal_plan_id")
+  name         String   @default("Shopping List")
+  generatedAt  DateTime @default(now()) @map("generated_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan   MealPlan?      @relation(fields: [mealPlanId], references: [id])
+  categories GroceryCategory[]
+
+  @@map("grocery_lists")
+}
+
+model GroceryCategory {
+  id        String   @id @default(cuid())
+  listId    String   @map("list_id")
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+
+  // Relations
+  groceryList GroceryList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  items       GroceryItem[]
+
+  @@map("grocery_categories")
+}
+
+model GroceryItem {
+  id          String   @id @default(cuid())
+  categoryId  String   @map("category_id")
+  name        String
+  amount      Float?
+  unit        String?
+  checked     Boolean  @default(false)
+  recipes     String   @default("[]")
+
+  // Relations
+  category GroceryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("grocery_items")
+}
