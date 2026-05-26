@@ -85,10 +85,13 @@ export class AuthService {
   private async generateTokens(userId: string, email: string) {
     const accessToken = jwt.sign({ id: userId, email }, config.auth.jwtSecret, {
       expiresIn: config.auth.jwtExpiresIn,
+      issuer: config.auth.jwtIssuer,
+      audience: config.auth.jwtAudience,
     });
 
     const refreshToken = jwt.sign({ id: userId, email }, config.auth.jwtRefreshSecret, {
       expiresIn: config.auth.jwtRefreshExpiresIn,
+      issuer: config.auth.jwtIssuer,
     });
 
     const expiresAt = new Date();

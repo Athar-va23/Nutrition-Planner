@@ -17,10 +17,10 @@ import { localStore, type MealPlanLocal, type RecipeLocal } from './localStore';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Groq API key — stored client-side since it's a free-tier key
-// In production, proxy through your backend to hide the key
+// Groq API key — user-provided via Settings page, stored in localStorage.
+// NEVER bundle API keys via VITE_ env vars — they're visible in the client bundle.
 function getGroqKey(): string {
-  return localStorage.getItem('nutripro_groq_key') || import.meta.env.VITE_GROQ_API_KEY || '';
+  return localStorage.getItem('nutripro_groq_key') || '';
 }
 
 export function setGroqKey(key: string): void {

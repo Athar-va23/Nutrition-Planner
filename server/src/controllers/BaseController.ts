@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { ZodError } from 'zod';
 import { logger } from '../utils/logger';
 import { AppError } from '../middleware/errorHandler';
 
@@ -24,6 +25,22 @@ export abstract class BaseController {
       return;
     }
 
+    // Handle Zod validation errors from controller-level parsing
+    if (error instanceof ZodError) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid input data',
+          details: error.errors.map((e) => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+      });
+      return;
+    }
+
     res.status(500).json({
       success: false,
       error: {
@@ -33,3 +50,4 @@ export abstract class BaseController {
     });
   }
 }
+

@@ -40,7 +40,7 @@ export class AuthController extends BaseController {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const { refreshToken } = req.body;
+      const { refreshToken } = refreshTokenSchema.parse(req.body);
       await this.service.logout(refreshToken);
       this.handleSuccess(res, { message: 'Logged out successfully' });
     } catch (error) {

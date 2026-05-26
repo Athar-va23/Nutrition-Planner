@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import { config } from '../config/unifiedConfig';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -28,10 +29,22 @@ export const authenticate = (
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, config.auth.jwtSecret, {
+      issuer: config.auth.jwtIssuer,
+      audience: config.auth.jwtAudience,
+    }) as any;
     req.user = decoded;
     next();
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_EXPIRED',
+          message: 'Token has expired. Please refresh your session.',
+        },
+      });
+    }
     return res.status(401).json({
       success: false,
       error: {
@@ -41,3 +54,4 @@ export const authenticate = (
     });
   }
 };
+
