@@ -1,4 +1,3 @@
-import React from 'react';
 import { Target, Zap, Activity, Flame } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -37,7 +36,7 @@ function StatCard({ label, value, target, unit, icon: Icon, color }: StatProps) 
             <span className="text-muted-foreground">Progress</span>
             <span className="text-primary">{Math.round(percentage)}%</span>
           </div>
-          <Progress value={percentage} className="h-1.5 bg-primary/10" indicatorClassName="bg-primary shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+          <Progress value={percentage} className="h-1.5 bg-primary/10" />
           <p className="text-[9px] text-muted-foreground text-right italic">Target: {target} {unit}</p>
         </div>
       </CardContent>

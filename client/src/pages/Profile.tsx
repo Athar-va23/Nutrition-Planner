@@ -34,10 +34,6 @@ export function Profile() {
     queryFn: () => userApi.getProfile(),
   });
 
-  const { data: preferencesData } = useQuery({
-    queryKey: ['preferences'],
-    queryFn: () => userApi.getPreferences(),
-  });
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => userApi.updateProfile(data),
@@ -54,16 +50,7 @@ export function Profile() {
     },
   });
 
-  const updatePreferencesMutation = useMutation({
-    mutationFn: (data: any) => userApi.updatePreferences(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['preferences'] });
-      toast({ title: 'Preferences updated successfully' });
-    },
-  });
-
   const profile = profileData?.data.data.profile;
-  const preferences = preferencesData?.data.data.preferences;
   const user = profileData?.data.data;
 
   const [profileForm, setProfileForm] = useState({

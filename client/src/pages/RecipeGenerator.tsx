@@ -64,7 +64,7 @@ export function RecipeGenerator() {
         ? 'Rate limited — wait a moment and try again.'
         : error.message === 'GROQ_KEY_MISSING'
         ? 'Set up your Groq API key in the Dashboard first.'
-        : 'Failed to generate recipes. Please try again.';
+        : (error.message || 'Failed to generate recipes. Please try again.');
       toast({ variant: 'destructive', title: 'Error', description: msg });
     } finally {
       setIsGenerating(false);

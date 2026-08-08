@@ -96,7 +96,7 @@ function safeParseJSON(raw: string): any {
 // ── Core Request ──
 async function groqRequest(
   messages: { role: string; content: string }[],
-  model: string = 'llama-3.1-8b-instant',
+  model: string = 'llama-3.3-70b-versatile',
   jsonMode: boolean = false,
   maxTokens: number = 1500,
 ): Promise<string> {
@@ -114,7 +114,7 @@ async function groqRequest(
     body.response_format = { type: 'json_object' };
   }
 
-  const res = await fetch(GROQ_API_URL, {
+  let res = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -122,6 +122,19 @@ async function groqRequest(
     },
     body: JSON.stringify(body),
   });
+
+  // Fallback to llama-3.1-8b-instant if primary model fails
+  if (!res.ok && model !== 'llama-3.1-8b-instant') {
+    body.model = 'llama-3.1-8b-instant';
+    res = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify(body),
+    });
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -267,7 +280,7 @@ Include ${days} day(s). Each day: breakfast, lunch, dinner, 1 snack. Make meals 
       { role: 'system', content: 'You are an expert nutritionist specializing in personalized meal planning. Follow the user\'s dietary restrictions and allergies with ZERO exceptions. Return ONLY valid JSON. No markdown, no explanation.' },
       { role: 'user', content: prompt },
     ],
-    'meta-llama/llama-4-scout-17b-16e-instruct',
+    'llama-3.3-70b-versatile',
     true,
     6000,
   );
@@ -328,7 +341,7 @@ IMPORTANT REQUIREMENTS:
       { role: 'system', content: 'You are an expert chef who writes detailed, foolproof recipes. Include precise temperatures, timing, and visual cues in every step. Return ONLY valid JSON.' },
       { role: 'user', content: prompt },
     ],
-    'meta-llama/llama-4-scout-17b-16e-instruct',
+    'llama-3.3-70b-versatile',
     true,
     4500,
   );

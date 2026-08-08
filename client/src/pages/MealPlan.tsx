@@ -49,7 +49,9 @@ export function MealPlan() {
     } catch (error: any) {
       const msg = error.message === 'RATE_LIMITED'
         ? 'Rate limited — wait a moment and try again.'
-        : 'Failed to generate meal plan. Please try again.';
+        : error.message === 'GROQ_KEY_MISSING'
+        ? 'Set up your Groq API key in the Dashboard first.'
+        : (error.message || 'Failed to generate meal plan. Please try again.');
       toast({ variant: 'destructive', title: 'Error', description: msg });
     } finally {
       setIsGenerating(false);

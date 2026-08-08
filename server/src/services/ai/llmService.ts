@@ -92,7 +92,7 @@ export class LLMService {
 
     // Using OpenRouter for high-quality generation
     const response = await openRouter.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'meta-llama/llama-3.3-70b-instruct',
       messages: [
         {
           role: 'system',
@@ -120,7 +120,7 @@ export class LLMService {
     const prompt = buildRecipePrompt(ingredients, preferences);
 
     const response = await openRouter.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'meta-llama/llama-3.3-70b-instruct',
       messages: [
         {
           role: 'system',
