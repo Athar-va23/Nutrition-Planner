@@ -7,7 +7,7 @@
  * - Client-side calls reduce server load to zero for AI
  * - Aggressive response caching in localStorage (24h TTL)
  * - Small, fast models (llama-3.1-8b-instant) for insights/chat
- * - Larger model (llama-3.3-70b-versatile) for meal plan generation
+ * - Larger model (meta-llama/llama-4-scout-17b-16e-instruct) for meal plan & recipe generation
  * - Vision model (llama-3.2-11b-vision-preview) for fridge scanning
  * 
  * Cost: $0/month on free tier for typical usage.
@@ -62,6 +62,35 @@ function setCache<T>(key: string, data: T): void {
 
 function hashObj(obj: unknown): string {
   return btoa(JSON.stringify(obj)).slice(0, 32);
+}
+
+// ── Robust JSON Parser ──
+function safeParseJSON(raw: string): any {
+  // Try direct parse first
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Attempt to extract JSON from markdown code blocks or surrounding text
+    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+                      raw.match(/(\{[\s\S]*\})/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1].trim());
+      } catch {
+        // Last resort: try to fix common issues (trailing commas, etc.)
+        const cleaned = jsonMatch[1]
+          .trim()
+          .replace(/,\s*([}\]])/g, '$1') // trailing commas
+          .replace(/([\w"'])\s*\n\s*(["'{\[])/g, '$1,$2'); // missing commas
+        try {
+          return JSON.parse(cleaned);
+        } catch {
+          throw new Error('AI returned malformed data. Please try again.');
+        }
+      }
+    }
+    throw new Error('AI returned an unexpected response. Please try again.');
+  }
 }
 
 // ── Core Request ──
@@ -238,12 +267,12 @@ Include ${days} day(s). Each day: breakfast, lunch, dinner, 1 snack. Make meals 
       { role: 'system', content: 'You are an expert nutritionist specializing in personalized meal planning. Follow the user\'s dietary restrictions and allergies with ZERO exceptions. Return ONLY valid JSON. No markdown, no explanation.' },
       { role: 'user', content: prompt },
     ],
-    'llama-3.3-70b-versatile',
+    'meta-llama/llama-4-scout-17b-16e-instruct',
     true,
     6000,
   );
 
-  const parsed = JSON.parse(raw);
+  const parsed = safeParseJSON(raw);
   const plan: MealPlanLocal = {
     id: crypto.randomUUID(),
     name: parsed.name || `${duration.charAt(0).toUpperCase() + duration.slice(1)} Plan`,
@@ -299,12 +328,12 @@ IMPORTANT REQUIREMENTS:
       { role: 'system', content: 'You are an expert chef who writes detailed, foolproof recipes. Include precise temperatures, timing, and visual cues in every step. Return ONLY valid JSON.' },
       { role: 'user', content: prompt },
     ],
-    'llama-3.3-70b-versatile',
+    'meta-llama/llama-4-scout-17b-16e-instruct',
     true,
     4500,
   );
 
-  const parsed = JSON.parse(raw);
+  const parsed = safeParseJSON(raw);
   const recipes: RecipeLocal[] = (parsed.recipes || []).map((r: any) => ({
     ...r,
     id: crypto.randomUUID(),
@@ -376,80 +405,9 @@ Return JSON: { "insights": [{ "title": "string (5 words max)", "description": "s
     600,
   );
 
-  const result = JSON.parse(raw);
+  const result = safeParseJSON(raw);
   setCache(cacheKey, result);
   return result;
-}
-
-// ── Fridge Scanner (Vision) ──
-
-export interface FridgeScanResult {
-  ingredients: {
-    name: string;
-    quantity: string;
-    confidence: 'high' | 'medium' | 'low';
-    category: string;
-  }[];
-  recipes: {
-    name: string;
-    description: string;
-    prepTime: number;
-    difficulty: string;
-    ingredients: string[];
-  }[];
-  tips: string[];
-}
-
-export async function scanFridgeImage(imageBase64: string): Promise<FridgeScanResult> {
-  const prompt = `Analyze this image of food/fridge contents. Identify all visible food items and ingredients.
-
-For each ingredient, provide:
-- name: the food item name
-- quantity: estimated amount (e.g., "2 pieces", "~500g", "1 bunch")
-- confidence: how confident you are it's that item ("high", "medium", or "low")
-- category: food category (produce, dairy, protein, grain, condiment, beverage, frozen, other)
-
-Then suggest 3 quick recipes that can be made primarily with the detected ingredients.
-
-Return ONLY valid JSON:
-{
-  "ingredients": [
-    { "name": "string", "quantity": "string", "confidence": "high|medium|low", "category": "string" }
-  ],
-  "recipes": [
-    {
-      "name": "string",
-      "description": "1-2 sentence description",
-      "prepTime": number_in_minutes,
-      "difficulty": "Easy|Medium|Hard",
-      "ingredients": ["ingredient1", "ingredient2"]
-    }
-  ],
-  "tips": ["1-2 short tips about storage or freshness of detected items"]
-}
-
-If you cannot identify any food items (e.g., the image is blurry or not food-related), return:
-{ "ingredients": [], "recipes": [], "tips": ["Could not detect food items. Please take a clearer photo of your fridge or ingredients."] }`;
-
-  const raw = await groqVisionRequest(imageBase64, prompt, 'llama-3.2-11b-vision-preview', 2500);
-
-  try {
-    // Try to parse as JSON directly
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
-    return {
-      ingredients: parsed.ingredients || [],
-      recipes: parsed.recipes || [],
-      tips: parsed.tips || [],
-    };
-  } catch {
-    // If JSON parsing fails, return a helpful error state
-    return {
-      ingredients: [],
-      recipes: [],
-      tips: ['AI response could not be parsed. Please try again with a clearer image.'],
-    };
-  }
 }
 
 // ── Meal Photo Analysis (for logging macros) ──

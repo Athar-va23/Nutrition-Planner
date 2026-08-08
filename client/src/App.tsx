@@ -9,7 +9,6 @@ import { Profile } from '@/pages/Profile';
 import { MealPlan } from '@/pages/MealPlan';
 import { RecipeGenerator } from '@/pages/RecipeGenerator';
 import { GroceryList } from '@/pages/GroceryList';
-import { ImageUpload } from '@/pages/ImageUpload';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 function App() {
@@ -39,7 +38,6 @@ function App() {
           <Route path="meal-plans" element={<MealPlan />} />
           <Route path="recipes" element={<RecipeGenerator />} />
           <Route path="grocery-list" element={<GroceryList />} />
-          <Route path="image-upload" element={<ImageUpload />} />
         </Route>
       </Routes>
       <Toaster />

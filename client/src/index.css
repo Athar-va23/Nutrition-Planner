@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -59,12 +59,12 @@
   body {
     background: rgb(10, 10, 14);
     color: rgb(248, 250, 252);
-    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bricolage Grotesque', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
     letter-spacing: -0.03em;
   }
@@ -208,7 +208,7 @@
   padding: 0.9rem 2rem;
   background: linear-gradient(135deg, #4ade80, #a3e635);
   color: rgb(10, 10, 14);
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 0.875rem;
   letter-spacing: 0.02em;
@@ -245,7 +245,7 @@
   padding: 0.9rem 2rem;
   background: transparent;
   color: rgb(248, 250, 252);
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.02em;
@@ -269,7 +269,7 @@
   letter-spacing: -0.02em;
 }
 .section-label {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   font-size: 0.7rem;
   letter-spacing: 0.18em;

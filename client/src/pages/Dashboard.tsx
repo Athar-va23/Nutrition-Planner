@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Flame, Zap, Droplets, Activity, TrendingUp, Plus,
-  ChefHat, ShoppingCart, Camera, Sparkles, ArrowRight,
+  ChefHat, ShoppingCart, Sparkles, ArrowRight,
   Clock, Target, BarChart3, Utensils, Apple, Moon,
   Sun, Settings,
 } from 'lucide-react';
@@ -112,12 +112,6 @@ export function Dashboard() {
           </p>
         </div>
         <div className="dash-header__actions">
-          <Link to="/image-upload">
-            <button className="dash-btn dash-btn--ghost">
-              <Camera className="w-4 h-4" />
-              <span>Scan</span>
-            </button>
-          </Link>
           <Link to="/meal-plans">
             <button className="dash-btn dash-btn--primary">
               <Plus className="w-4 h-4" />

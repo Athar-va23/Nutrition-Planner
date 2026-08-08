@@ -15,8 +15,11 @@ module.exports = {
     },
     extend: {
       fontFamily: {
+        syne: ['"Syne"', 'sans-serif'],
+        space: ['"Space Grotesk"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
         serif: ['"Instrument Serif"', 'Georgia', 'serif'],
-        sans: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

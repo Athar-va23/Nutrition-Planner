@@ -5,7 +5,6 @@ import {
   Calendar, 
   ChefHat, 
   ShoppingCart, 
-  Camera,
   LogOut 
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -16,7 +15,6 @@ const navItems = [
   { path: '/meal-plans', label: 'Meal Plans', icon: Calendar },
   { path: '/recipes', label: 'Recipes', icon: ChefHat },
   { path: '/grocery-list', label: 'Grocery List', icon: ShoppingCart },
-  { path: '/image-upload', label: 'Scan Fridge', icon: Camera },
   { path: '/profile', label: 'Profile', icon: User },
 ];
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChefHat, Calendar, ShoppingCart, Camera, Bot, BarChart3, Star, Check, Zap, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, ChefHat, Calendar, ShoppingCart, Bot, BarChart3, Star, Check, Zap, Shield, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -10,9 +10,8 @@ const HeroCanvas = lazy(() => import('@/components/HeroCanvas').then(m => ({ def
 
 const features = [
   { icon: Calendar, title: 'AI Meal Plans', desc: 'Personalized weekly plans adapting to your goals, macros, and food preferences.', color: '#4ade80' },
-  { icon: ChefHat, title: 'Smart Recipes', desc: 'Tell the AI what is in your fridge. Get chef-grade recipes in seconds.', color: '#a3e635' },
+  { icon: ChefHat, title: 'Smart Recipes', desc: 'Get chef-grade recipes in seconds based on your goals and preferences.', color: '#a3e635' },
   { icon: ShoppingCart, title: 'Grocery Lists', desc: 'Auto-generated, aisle-sorted shopping lists synced to your meal plan.', color: '#2dd4bf' },
-  { icon: Camera, title: 'Fridge Scanner', desc: 'Snap your fridge. Vision AI identifies ingredients and suggests meals instantly.', color: '#4ade80' },
   { icon: Bot, title: 'NutriAI Coach', desc: '24/7 science-backed nutrition guidance from your personal AI concierge.', color: '#a3e635' },
   { icon: BarChart3, title: 'Macro Tracking', desc: 'Beautiful real-time dashboards showing daily nutrition and progress toward goals.', color: '#2dd4bf' },
 ];
@@ -25,13 +24,13 @@ const steps = [
 
 const testimonials = [
   { name: 'Sarah Chen', role: 'Fitness Coach', text: 'The first AI planner that actually understands macro cycling. My clients are obsessed.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80' },
-  { name: 'Marcus Williams', role: 'Home Cook', text: 'The fridge scanner is a game-changer. Zero food waste. Better meals than I ever made.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80' },
+  { name: 'Marcus Williams', role: 'Home Cook', text: 'Zero food waste. Better meals than I ever made. This app transformed my kitchen.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80' },
   { name: 'Dr. Priya Sharma', role: 'Nutritionist', text: 'I recommend this to every client. AI-generated plans aligned with clinical guidelines.', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80' },
 ];
 
 const plans = [
   { name: 'Free', price: '$0', period: '/forever', desc: 'Start your journey, zero cost.', features: ['3 meal plans/month', 'Basic macro tracking', 'NutriAI chat (50/day)', '10 recipe generations'], cta: 'Get Started', featured: false },
-  { name: 'Pro', price: '$9', period: '/month', desc: 'Unlock unlimited intelligence.', features: ['Unlimited meal plans', 'Advanced analytics', 'Unlimited AI chat', 'Fridge scanner', 'PDF export'], cta: 'Start Free Trial', featured: true },
+  { name: 'Pro', price: '$9', period: '/month', desc: 'Unlock unlimited intelligence.', features: ['Unlimited meal plans', 'Advanced analytics', 'Unlimited AI chat', 'PDF export'], cta: 'Start Free Trial', featured: true },
   { name: 'Team', price: '$24', period: '/month', desc: 'For families and coaches.', features: ['Everything in Pro', 'Up to 6 profiles', 'Shared grocery lists', 'Coach dashboard', 'API access'], cta: 'Contact Sales', featured: false },
 ];
 
@@ -208,7 +207,7 @@ export function Home() {
       {/* ── Marquee ── */}
       <div className="py-5 border-y border-[rgba(74,222,128,0.06)] bg-[rgba(20,23,32,0.5)] overflow-hidden">
         <div className="animate-marquee marquee-track">
-          {['AI Meal Planning', '·', 'Smart Recipes', '·', 'Macro Tracking', '·', 'Fridge Scanner', '·', 'Grocery Lists', '·', 'NutriAI Coach', '·', 'AI Meal Planning', '·', 'Smart Recipes', '·', 'Macro Tracking', '·', 'Fridge Scanner', '·', 'Grocery Lists', '·', 'NutriAI Coach'].map((t, i) => (
+          {['AI Meal Planning', '·', 'Smart Recipes', '·', 'Macro Tracking', '·', 'Grocery Lists', '·', 'NutriAI Coach', '·', 'AI Meal Planning', '·', 'Smart Recipes', '·', 'Macro Tracking', '·', 'Grocery Lists', '·', 'NutriAI Coach'].map((t, i) => (
             <span key={i} className={`text-sm font-semibold tracking-widest uppercase ${t === '·' ? 'text-[#4ade80]' : 'text-[rgb(71,85,105)]'}`}>{t}</span>
           ))}
         </div>
@@ -224,7 +223,7 @@ export function Home() {
             <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
               Built for <span className="heading-serif text-gradient-green">peak performance.</span>
             </h2>
-            <p className="text-[rgb(148,163,184)] text-sm mt-5 leading-relaxed max-w-lg">Six pillars of AI-driven nutrition intelligence — each engineered to optimize a different part of how you eat.</p>
+            <p className="text-[rgb(148,163,184)] text-sm mt-5 leading-relaxed max-w-lg">Five pillars of AI-driven nutrition intelligence — each engineered to optimize a different part of how you eat.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

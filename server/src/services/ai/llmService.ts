@@ -92,7 +92,7 @@ export class LLMService {
 
     // Using OpenRouter for high-quality generation
     const response = await openRouter.chat.completions.create({
-      model: 'meta-llama/llama-3.1-70b-instruct',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         {
           role: 'system',
@@ -120,7 +120,7 @@ export class LLMService {
     const prompt = buildRecipePrompt(ingredients, preferences);
 
     const response = await openRouter.chat.completions.create({
-      model: 'meta-llama/llama-3.1-70b-instruct',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         {
           role: 'system',
@@ -150,7 +150,7 @@ export class LLMService {
     Be concise, helpful, and professional. Provide actionable nutritional advice.`;
 
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: systemPrompt },
         ...history.slice(-5),
