@@ -1,6 +1,29 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+function getBaseApiUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (!envUrl) {
+    return 'http://localhost:3000/api/v1';
+  }
+
+  // Strip trailing slashes
+  let url = envUrl.replace(/\/+$/, '');
+
+  // If already ends in /api/v1, use it
+  if (url.endsWith('/api/v1')) {
+    return url;
+  }
+
+  // If ends in /api, append /v1
+  if (url.endsWith('/api')) {
+    return `${url}/v1`;
+  }
+
+  // If user entered base domain like https://myapp.onrender.com, append /api/v1
+  return `${url}/api/v1`;
+}
+
+export const API_BASE_URL = getBaseApiUrl();
 
 // Create axios instance
 export const api = axios.create({

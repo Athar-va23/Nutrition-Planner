@@ -39,14 +39,22 @@ app.use('/api/', apiLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// API Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/meal-plans', mealPlanRoutes);
-app.use('/api/v1/recipes', recipeRoutes);
-app.use('/api/v1/grocery-lists', groceryRoutes);
-app.use('/api/v1/images', imageRoutes);
-app.use('/api/v1/ai', aiRoutes);
+// API Routes (mounted under /api/v1 and aliases for resilience)
+const routeModules = [
+  { path: '/auth', router: authRoutes },
+  { path: '/users', router: userRoutes },
+  { path: '/meal-plans', router: mealPlanRoutes },
+  { path: '/recipes', router: recipeRoutes },
+  { path: '/grocery-lists', router: groceryRoutes },
+  { path: '/images', router: imageRoutes },
+  { path: '/ai', router: aiRoutes },
+];
+
+for (const { path: routePath, router } of routeModules) {
+  app.use(`/api/v1${routePath}`, router);
+  app.use(`/api${routePath}`, router);
+  app.use(routePath, router);
+}
 
 // Error handling
 app.use(errorHandler);
