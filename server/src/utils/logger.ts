@@ -27,19 +27,16 @@ export const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'nutrition-planner-api' },
   transports: [
-    errorRotateTransport,
-    combinedRotateTransport,
-  ],
-});
-
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
+        winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
+          const logMsg = stack || (typeof message === 'object' ? JSON.stringify(message) : message);
+          const metaStr = Object.keys(meta).length > 1 ? ` ${JSON.stringify(meta)}` : '';
+          return `[${timestamp}] ${level}: ${logMsg}${metaStr}`;
+        })
       ),
-    })
-  );
-}
+    }),
+  ],
+});
 

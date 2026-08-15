@@ -27,17 +27,17 @@ const PORT = process.env.PORT || 3000;
 app.use(cors(corsOptions));
 app.use(securityMiddleware);
 
+// Health check (placed before rate limiter for uptime monitors)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Rate limiting
 app.use('/api/', apiLimiter);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
@@ -62,8 +62,9 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  logger.info(`Server running on http://${HOST}:${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
