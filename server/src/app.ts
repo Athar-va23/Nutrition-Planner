@@ -19,6 +19,7 @@ import aiRoutes from './routes/ai.routes';
 
 dotenv.config();
 
+// Express Application instance
 const app = express();
 const PORT = process.env.PORT || 3000;
 

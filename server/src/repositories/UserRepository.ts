@@ -3,11 +3,23 @@ import { User, RefreshToken } from '@prisma/client';
 
 export class UserRepository {
   async findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findUnique({
+      where: { email },
+      include: {
+        profile: true,
+        preferences: true,
+      },
+    });
   }
 
   async findById(id: string) {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        preferences: true,
+      },
+    });
   }
 
   async create(data: { email: string; passwordHash: string; firstName: string; lastName: string }) {

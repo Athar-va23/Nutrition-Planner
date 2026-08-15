@@ -64,7 +64,7 @@ export class NutritionService {
         throw new Error(`USDA API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       return data.foods || [];
     } catch (error) {
       console.error('USDA search error:', error);
@@ -123,7 +123,6 @@ export class NutritionService {
       gram: 1,
       grams: 1,
       ml: 1,
-      'ml': 1,
       l: 1000,
       liter: 1000,
       kg: 1000,

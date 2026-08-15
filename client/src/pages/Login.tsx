@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { authApi } from '@/lib/api';
+import { authApi, userApi } from '@/lib/api';
 import { localStore } from '@/lib/localStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -15,9 +15,8 @@ export function Login() {
   const { toast } = useToast();
   const setAuth = useAuthStore((state) => state.setAuth);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const onboardingComplete = useAuthStore((state) => state.onboardingComplete);
 
-  // Clear any stale auth state when landing on the login page
+  // Clear any stale auth tokens when explicitly visiting the login page
   useEffect(() => {
     clearAuth();
   }, [clearAuth]);
@@ -41,12 +40,47 @@ export function Login() {
         const response = await authApi.login(formData.email, formData.password);
         const { user, tokens } = response.data.data;
         setAuth(user, tokens.accessToken, tokens.refreshToken);
+
+        // Check if onboarding is completed based on backend response or localStore
+        let quizDone = Boolean(
+          user.onboardingComplete ||
+          (user.profile?.heightCm && user.profile?.weightKg) ||
+          localStore.isOnboardingComplete()
+        );
+
+        // Fallback check against server profile if needed
+        if (!quizDone) {
+          try {
+            const profRes = await userApi.getProfile();
+            const p = profRes.data?.data?.profile;
+            if (p && p.heightCm && p.weightKg) {
+              quizDone = true;
+              const currentLocal = localStore.getUserProfile();
+              localStore.setUserProfile({
+                ...currentLocal,
+                firstName: user.firstName || currentLocal.firstName,
+                lastName: user.lastName || currentLocal.lastName,
+                email: user.email || currentLocal.email,
+                age: p.age ?? currentLocal.age,
+                gender: p.gender ?? currentLocal.gender,
+                heightCm: p.heightCm ?? currentLocal.heightCm,
+                weightKg: p.weightKg ?? currentLocal.weightKg,
+                activityLevel: p.activityLevel ?? currentLocal.activityLevel,
+                healthGoal: p.healthGoal ?? currentLocal.healthGoal,
+                calorieTarget: p.calorieTarget ?? currentLocal.calorieTarget,
+              });
+              localStore.setOnboardingComplete();
+            }
+          } catch {
+            // best-effort check
+          }
+        }
+
         toast({
           title: 'Welcome back!',
           description: `Logged in as ${user.email}`,
         });
-        // Check if onboarding was completed (check both Zustand and localStore)
-        const quizDone = onboardingComplete || localStore.isOnboardingComplete();
+        
         navigate(quizDone ? '/dashboard' : '/onboarding');
       } else {
         const response = await authApi.register({
@@ -65,10 +99,19 @@ export function Login() {
         navigate('/onboarding');
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
+      const serverMessage = error.response?.data?.error?.message;
+      const validationDetails = error.response?.data?.error?.details;
+      let description = serverMessage || error.message || 'Something went wrong. Please check your credentials.';
+
+      if (validationDetails && Array.isArray(validationDetails) && validationDetails.length > 0) {
+        description = validationDetails.map((d: any) => d.message).join('. ');
+      }
+
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.response?.data?.error?.message || 'Something went wrong',
+        title: isLogin ? 'Sign In Failed' : 'Registration Failed',
+        description,
       });
     } finally {
       setIsLoading(false);

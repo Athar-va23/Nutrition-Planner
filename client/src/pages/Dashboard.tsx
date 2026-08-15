@@ -34,7 +34,7 @@ function getGreetingIcon() {
 
 export function Dashboard() {
   const user = useAuthStore((s) => s.user);
-  const profile = localStore.getUserProfile();
+  const [profile, setProfile] = useState(localStore.getUserProfile());
   const [todayLog, setTodayLog] = useState<DailyLogEntry | null>(localStore.getTodayLog());
   const [recentPlans, setRecentPlans] = useState<MealPlanLocal[]>(localStore.getMealPlans().slice(0, 3));
   const [insights, setInsights] = useState<{ title: string; description: string; type: string }[]>([]);
@@ -42,6 +42,11 @@ export function Dashboard() {
   const [showApiSetup, setShowApiSetup] = useState(!hasGroqKey());
   const [currentTime, setCurrentTime] = useState(new Date());
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync latest profile on mount & when auth state updates
+  useEffect(() => {
+    setProfile(localStore.getUserProfile());
+  }, [user]);
 
   // Live clock
   useEffect(() => {
@@ -65,6 +70,7 @@ export function Dashboard() {
 
   // Refresh local data
   const refreshData = () => {
+    setProfile(localStore.getUserProfile());
     setTodayLog(localStore.getTodayLog());
     setRecentPlans(localStore.getMealPlans().slice(0, 3));
   };

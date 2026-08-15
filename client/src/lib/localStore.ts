@@ -78,11 +78,22 @@ export const localStore = {
 
   // ── User Profile ──
   getUserProfile(): UserProfileLocal {
-    return this.get<UserProfileLocal>('profile', defaultProfile);
+    const saved = this.get<Partial<UserProfileLocal>>('profile', {});
+    return {
+      ...defaultProfile,
+      ...saved,
+      dietaryTypes: saved.dietaryTypes || defaultProfile.dietaryTypes,
+      allergies: saved.allergies || defaultProfile.allergies,
+      cuisinePreferences: saved.cuisinePreferences || defaultProfile.cuisinePreferences,
+    };
   },
 
-  setUserProfile(profile: UserProfileLocal): void {
-    this.set('profile', profile);
+  setUserProfile(profile: Partial<UserProfileLocal>): void {
+    const current = this.getUserProfile();
+    this.set('profile', {
+      ...current,
+      ...profile,
+    });
   },
 
   // ── Meal Plans ──

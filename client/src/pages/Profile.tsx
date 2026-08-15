@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { userApi } from '@/lib/api';
+import { localStore } from '@/lib/localStore';
+import { useAuthStore } from '@/stores/authStore';
 import { calculateBMI, getBMICategory } from '@/lib/utils';
 
 const activityLevels = [
@@ -28,16 +30,81 @@ const healthGoals = [
 export function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const setOnboardingComplete = useAuthStore((s) => s.setOnboardingComplete);
+
+  const localProfile = localStore.getUserProfile();
   
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: () => userApi.getProfile(),
   });
 
+  const profile = profileData?.data?.data?.profile;
+  const user = profileData?.data?.data;
+
+  const [profileForm, setProfileForm] = useState({
+    age: localProfile?.age ? String(localProfile.age) : '',
+    gender: localProfile?.gender || 'other',
+    heightCm: localProfile?.heightCm ? String(localProfile.heightCm) : '',
+    weightKg: localProfile?.weightKg ? String(localProfile.weightKg) : '',
+    activityLevel: localProfile?.activityLevel || 'moderate',
+    healthGoal: localProfile?.healthGoal || 'maintain',
+    calorieTarget: localProfile?.calorieTarget ? String(localProfile.calorieTarget) : '',
+  });
+
+  // Sync form whenever remote profileData loads or updates
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        age: profile.age !== null && profile.age !== undefined ? String(profile.age) : '',
+        gender: profile.gender || 'other',
+        heightCm: profile.heightCm !== null && profile.heightCm !== undefined ? String(profile.heightCm) : '',
+        weightKg: profile.weightKg !== null && profile.weightKg !== undefined ? String(profile.weightKg) : '',
+        activityLevel: profile.activityLevel || 'moderate',
+        healthGoal: profile.healthGoal || 'maintain',
+        calorieTarget: profile.calorieTarget !== null && profile.calorieTarget !== undefined ? String(profile.calorieTarget) : '',
+      });
+
+      // Synchronize with localStore
+      const current = localStore.getUserProfile();
+      localStore.setUserProfile({
+        ...current,
+        firstName: user?.firstName || current.firstName,
+        lastName: user?.lastName || current.lastName,
+        email: user?.email || current.email,
+        age: profile.age ?? current.age,
+        gender: profile.gender ?? current.gender,
+        heightCm: profile.heightCm ?? current.heightCm,
+        weightKg: profile.weightKg ?? current.weightKg,
+        activityLevel: profile.activityLevel ?? current.activityLevel,
+        healthGoal: profile.healthGoal ?? current.healthGoal,
+        calorieTarget: profile.calorieTarget ?? current.calorieTarget,
+      });
+
+      if (profile.heightCm && profile.weightKg) {
+        setOnboardingComplete();
+      }
+    }
+  }, [profile, user, setOnboardingComplete]);
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => userApi.updateProfile(data),
-    onSuccess: () => {
+    onSuccess: (res, variables) => {
+      const savedProfile = res.data?.data?.profile;
+      const currentLocal = localStore.getUserProfile();
+      const updatedLocal = {
+        ...currentLocal,
+        age: variables.age !== undefined ? variables.age : currentLocal.age,
+        gender: variables.gender !== undefined ? variables.gender : currentLocal.gender,
+        heightCm: variables.heightCm !== undefined ? variables.heightCm : currentLocal.heightCm,
+        weightKg: variables.weightKg !== undefined ? variables.weightKg : currentLocal.weightKg,
+        activityLevel: variables.activityLevel || currentLocal.activityLevel,
+        healthGoal: variables.healthGoal || currentLocal.healthGoal,
+        calorieTarget: savedProfile?.calorieTarget || variables.calorieTarget || currentLocal.calorieTarget,
+      };
+      localStore.setUserProfile(updatedLocal);
+      setOnboardingComplete();
+
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast({ title: 'Profile updated successfully' });
     },
@@ -50,36 +117,30 @@ export function Profile() {
     },
   });
 
-  const profile = profileData?.data.data.profile;
-  const user = profileData?.data.data;
-
-  const [profileForm, setProfileForm] = useState({
-    age: profile?.age || '',
-    gender: profile?.gender || '',
-    heightCm: profile?.heightCm || '',
-    weightKg: profile?.weightKg || '',
-    activityLevel: profile?.activityLevel || 'moderate',
-    healthGoal: profile?.healthGoal || 'maintain',
-    calorieTarget: profile?.calorieTarget || '',
-  });
-
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileMutation.mutate({
-      ...profileForm,
-      age: profileForm.age ? parseInt(profileForm.age as string) : undefined,
-      heightCm: profileForm.heightCm ? parseFloat(profileForm.heightCm as string) : undefined,
-      weightKg: profileForm.weightKg ? parseFloat(profileForm.weightKg as string) : undefined,
-      calorieTarget: profileForm.calorieTarget ? parseInt(profileForm.calorieTarget as string) : undefined,
-    });
+    const payload: any = {
+      activityLevel: profileForm.activityLevel,
+      healthGoal: profileForm.healthGoal,
+    };
+    if (profileForm.age) payload.age = parseInt(profileForm.age as string);
+    if (profileForm.gender) payload.gender = profileForm.gender;
+    if (profileForm.heightCm) payload.heightCm = parseFloat(profileForm.heightCm as string);
+    if (profileForm.weightKg) payload.weightKg = parseFloat(profileForm.weightKg as string);
+    if (profileForm.calorieTarget) payload.calorieTarget = parseInt(profileForm.calorieTarget as string);
+
+    updateProfileMutation.mutate(payload);
   };
 
-  const bmi = profile?.weightKg && profile?.heightCm
-    ? calculateBMI(profile.weightKg, profile.heightCm)
+  const effectiveWeight = profileForm.weightKg ? parseFloat(profileForm.weightKg) : profile?.weightKg;
+  const effectiveHeight = profileForm.heightCm ? parseFloat(profileForm.heightCm) : profile?.heightCm;
+
+  const bmi = effectiveWeight && effectiveHeight
+    ? calculateBMI(effectiveWeight, effectiveHeight)
     : null;
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading && !localProfile.heightCm) {
+    return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
   }
 
   return (

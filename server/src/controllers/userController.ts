@@ -38,8 +38,8 @@ export const userController = {
         data: {
           id: userId,
           email: req.user!.email,
-          firstName: req.user!.firstName || '',
-          lastName: req.user!.lastName || '',
+          firstName: '',
+          lastName: '',
           profile: {
             age: null,
             gender: null,
@@ -72,22 +72,43 @@ export const userController = {
         });
       }
 
+      const currentProfile = await prisma.userProfile.findUnique({ where: { userId } });
+
+      const age = profileData.age !== undefined ? profileData.age : currentProfile?.age;
+      const gender = profileData.gender !== undefined ? profileData.gender : currentProfile?.gender;
+      const heightCm = profileData.heightCm !== undefined ? profileData.heightCm : currentProfile?.heightCm;
+      const weightKg = profileData.weightKg !== undefined ? profileData.weightKg : currentProfile?.weightKg;
+      const activityLevel = profileData.activityLevel || currentProfile?.activityLevel || 'moderate';
+      const healthGoal = profileData.healthGoal || currentProfile?.healthGoal || 'maintain';
+
       let calorieTarget = profileData.calorieTarget;
-      if (!calorieTarget && profileData.weightKg && profileData.heightCm && profileData.age) {
+      if (!calorieTarget && weightKg && heightCm && age) {
         calorieTarget = calculateCalorieTarget(
-          profileData.weightKg,
-          profileData.heightCm,
-          profileData.age,
-          profileData.gender,
-          profileData.activityLevel,
-          profileData.healthGoal
+          weightKg,
+          heightCm,
+          age,
+          gender || 'other',
+          activityLevel,
+          healthGoal
         );
+      } else if (!calorieTarget && currentProfile?.calorieTarget) {
+        calorieTarget = currentProfile.calorieTarget;
       }
+
+      const updatePayload: any = {
+        activityLevel,
+        healthGoal,
+      };
+      if (age !== undefined && age !== null) updatePayload.age = age;
+      if (gender !== undefined && gender !== null) updatePayload.gender = gender;
+      if (heightCm !== undefined && heightCm !== null) updatePayload.heightCm = heightCm;
+      if (weightKg !== undefined && weightKg !== null) updatePayload.weightKg = weightKg;
+      if (calorieTarget !== undefined && calorieTarget !== null) updatePayload.calorieTarget = calorieTarget;
 
       const profile = await prisma.userProfile.upsert({
         where: { userId },
-        create: { userId, ...profileData, calorieTarget },
-        update: { ...profileData, calorieTarget },
+        create: { userId, ...updatePayload },
+        update: updatePayload,
       });
 
       res.json({

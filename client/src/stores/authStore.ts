@@ -1,12 +1,34 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { localStore } from '@/lib/localStore';
+import { localStore, type UserProfileLocal } from '@/lib/localStore';
 
-interface User {
+export interface UserProfileData {
+  age?: number | null;
+  gender?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  activityLevel?: string;
+  healthGoal?: string;
+  calorieTarget?: number | null;
+}
+
+export interface UserPreferencesData {
+  dietaryTypes?: string[];
+  allergies?: string[];
+  restrictedFoods?: string[];
+  cuisinePreferences?: string[];
+  maxPrepTime?: number | null;
+  mealsPerDay?: number;
+}
+
+export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
+  profile?: UserProfileData | null;
+  preferences?: UserPreferencesData | null;
+  onboardingComplete?: boolean;
 }
 
 interface AuthState {
@@ -34,7 +56,50 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem('refreshToken', refreshToken);
         // Scope all localStore data to this user
         localStore.setCurrentUser(user.id);
-        set({ user, accessToken, refreshToken, isAuthenticated: true });
+
+        const hasMetrics = Boolean(
+          user.profile &&
+          user.profile.heightCm &&
+          user.profile.weightKg
+        );
+
+        if (user.profile) {
+          const current = localStore.getUserProfile();
+          const merged: UserProfileLocal = {
+            ...current,
+            firstName: user.firstName || current.firstName,
+            lastName: user.lastName || current.lastName,
+            email: user.email || current.email,
+            age: user.profile.age ?? current.age,
+            gender: user.profile.gender ?? current.gender,
+            heightCm: user.profile.heightCm ?? current.heightCm,
+            weightKg: user.profile.weightKg ?? current.weightKg,
+            activityLevel: user.profile.activityLevel ?? current.activityLevel,
+            healthGoal: user.profile.healthGoal ?? current.healthGoal,
+            calorieTarget: user.profile.calorieTarget ?? current.calorieTarget,
+            dietaryTypes: user.preferences?.dietaryTypes ?? current.dietaryTypes,
+            allergies: user.preferences?.allergies ?? current.allergies,
+            cuisinePreferences: user.preferences?.cuisinePreferences ?? current.cuisinePreferences,
+          };
+          localStore.setUserProfile(merged);
+          if (hasMetrics) {
+            localStore.setOnboardingComplete();
+          }
+        }
+
+        const isComplete = Boolean(
+          user.onboardingComplete ||
+          hasMetrics ||
+          localStore.isOnboardingComplete()
+        );
+
+        set({
+          user,
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          onboardingComplete: isComplete,
+        });
       },
       clearAuth: () => {
         localStorage.removeItem('accessToken');
@@ -44,7 +109,10 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, onboardingComplete: false });
       },
       setUser: (user) => set({ user }),
-      setOnboardingComplete: () => set({ onboardingComplete: true }),
+      setOnboardingComplete: () => {
+        localStore.setOnboardingComplete();
+        set({ onboardingComplete: true });
+      },
     }),
     {
       name: 'auth-storage',
@@ -59,3 +127,4 @@ const persisted = useAuthStore.getState();
 if (persisted.user?.id) {
   localStore.setCurrentUser(persisted.user.id);
 }
+

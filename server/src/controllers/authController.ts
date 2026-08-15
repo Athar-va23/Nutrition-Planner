@@ -3,6 +3,7 @@ import { BaseController } from './BaseController';
 import { authService, AuthService } from '../services/AuthService';
 import { loginSchema, registerSchema, refreshTokenSchema } from '../validators/auth.schema';
 
+// Auth Controller handles authentication endpoints
 export class AuthController extends BaseController {
   constructor(private readonly service: AuthService) {
     super();

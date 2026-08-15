@@ -2,11 +2,11 @@ import vision from '@google-cloud/vision';
 
 // Initialize Google Cloud Vision client
 // Requires GOOGLE_APPLICATION_CREDENTIALS environment variable
-let client: vision.ImageAnnotatorClient | null = null;
+let client: any = null;
 
 try {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    client = new vision.ImageAnnotatorClient();
+    client = new (vision as any).ImageAnnotatorClient();
   }
 } catch (error) {
   console.warn('Google Vision client not initialized:', error);

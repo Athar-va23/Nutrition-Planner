@@ -67,11 +67,7 @@ export const groceryController = {
             },
             _count: {
               select: {
-                categories: {
-                  select: {
-                    items: true,
-                  },
-                },
+                categories: true,
               },
             },
           },
